@@ -1,0 +1,10 @@
+# List of plugins for analysis
+# Author: Ajit Johnson Nirmal
+
+# R
+# Use these scripts by:
+library(devtools)
+library(roxygen2)
+source_url("")
+
+# Python
