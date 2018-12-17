@@ -3,7 +3,7 @@
 
 genesummary <- function(x) {
 	x$gene <- as.factor(x$gene)
-	y=aggregate(.~gene, data=x, mean)
+	y=aggregate(.~gene, data=x, max)
 	rownames(y)=y[,1]
 	y=y[,-1]
 	return(y)
