@@ -1,15 +1,17 @@
-# List of custom script plugins for analysis
-#### Ajit Johnson Nirmal
+## List of custom script plugins for analysis
+Ajit Johnson Nirmal
 
 ## R
 #### Use these scripts by:
 library(devtools) </br>
-library(roxygen2) </br>
+library(roxygen2) </br>s
 source_url ("") </br>
 
 ### Merge multiple transcripts into one gene
+~~~~
 genesummary (x) </br>
 source_url("https://raw.githubusercontent.com/ajitjohnson/Jupyter-Notebooks/master/r_scripts/collapse_to_one_gene.R") </br>
+~~~~
 
 ### After normalization, this function can be used to plot the before & after comparision (barplot)
 plotba (x,y) </br>
@@ -22,7 +24,7 @@ source_url("https://raw.githubusercontent.com/ajitjohnson/Jupyter-Notebooks/mast
 
 
 ## Python
-### Use these scripts by:
+#### Use these scripts by:
 Run file_url and then run the following command
 import wget </br>
 exec(open(wget.download(file_url)).read()) </br>
