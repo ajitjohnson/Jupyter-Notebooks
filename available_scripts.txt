@@ -24,7 +24,8 @@ source_url("https://raw.githubusercontent.com/ajitjohnson/Jupyter-Notebooks/mast
 # Python
 # Use these scripts by:
 # Run file_url and then run the following command
-# exec(open(wget.download(file_url)).read())
+import wget
+exec(open(wget.download(file_url)).read())
 
 # Preprocess CycIF data: Normalization
 # Requires a pandas dataframe with cells on rows and markers/genes on columns
