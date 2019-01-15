@@ -1,11 +1,11 @@
 # List of custom script plugins for analysis
-### Author: Ajit Johnson Nirmal
+#### Author: Ajit Johnson Nirmal
 
-# R
-### Use these scripts by:
-library(devtools)
-library(roxygen2)
-source_url("")
+## R
+#### Use these scripts by:
+library(devtools) \s
+library(roxygen2) \s
+source_url("") \s
 
 ## Merge multiple transcripts into one gene
 genesummary (x)
