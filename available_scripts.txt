@@ -23,7 +23,10 @@ source_url("https://raw.githubusercontent.com/ajitjohnson/Jupyter-Notebooks/mast
 
 # Python
 # Use these scripts by:
+# Run file_url and then run the following command
+# exec(open(wget.download(file_url)).read())
 
 # Preprocess CycIF data: Normalization
 # Requires a pandas dataframe with cells on rows and markers/genes on columns
 # mi_pp_normalize (x)
+file_url = 'https://raw.githubusercontent.com/ajitjohnson/Jupyter-Notebooks/master/py_scripts/mi_pp_normalize.py'
