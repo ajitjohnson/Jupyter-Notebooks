@@ -16,4 +16,5 @@ def mi_pp_anndata (data):
     var = pd.DataFrame(index=var_names)
     # Create AnnData
     adata = ad.AnnData(X, obs=obs, var=var)
-    return (adata, X, obs, var)
+    return (adata)
+    return (X)
