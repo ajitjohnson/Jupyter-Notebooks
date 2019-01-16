@@ -44,3 +44,10 @@ Requires a pandas dataframe with cells on rows and markers/genes on columns.
 mi_pp_normalize (x)
 file_url = 'https://raw.githubusercontent.com/ajitjohnson/Jupyter-Notebooks/master/py_scripts/mi_pp_normalize.py'
 ~~~~
+
+### Preprocess CycIF data: Convert dataframe into AnnData (Annotated Data)
+Requires a pandas dataframe with cells on rows and markers/genes on columns.
+~~~~
+mi_pp_anndata (x)
+file_url = 'https://raw.githubusercontent.com/ajitjohnson/Jupyter-Notebooks/master/py_scripts/mi_pp_anndata.py'
+~~~~
