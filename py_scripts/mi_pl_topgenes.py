@@ -18,3 +18,8 @@ def mi_pl_topgenes (adata, n_top: int = 10):
     # Create AnnData
     adata = ad.AnnData(X, obs=obs, var=var)
     return (adata)
+
+
+d = {'avg': adata.var['avg_exp']}
+df = pd.DataFrame(data=d)
+df = df.sort_values(by=['avg'], ascending=False)
