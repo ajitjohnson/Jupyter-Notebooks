@@ -3,7 +3,6 @@
 # Last updated: 1/15/19
 
 import numpy as np
-import pandas as pd
 def mi_pp_normalize (data, qq = 0.001):
     print ("Applying log transformation and quantile normalization...")
     # log10-transform of users data
