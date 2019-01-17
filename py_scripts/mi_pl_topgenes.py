@@ -1,13 +1,13 @@
-# Preprocess the imaging data: Convert normalized data into AnnData
+# Plotting the user defined top expressed genes/ protein markers
 # Author: Ajit Johnson Nirmal
-# Last updated: 1/16/19
+# Last updated: 1/17/19
 
+import seaborn as sns; sns.set(style="white", color_codes=True)
+import matplotlib.pyplot as plt
 import anndata as ad
-import numpy as np
-def mi_pp_anndata (data):
-    print ("Converting dataframe into anndata - Annotated Data...")
+def mi_pl_topgenes (adata, n_top: int = 10):
     # Extract array of expression values
-    X = data.values.astype(np.int32)
+    X = data.values
     # Convert the cell names/ index into observations (obs)
     obs = pd.DataFrame()
     obs['cells'] = data.index
@@ -16,5 +16,5 @@ def mi_pp_anndata (data):
     n_vars = len(var_names)
     var = pd.DataFrame(index=var_names)
     # Create AnnData
-    adata = ad.AnnData(X, obs=obs, var=var, dtype='int32')
+    adata = ad.AnnData(X, obs=obs, var=var)
     return (adata)
