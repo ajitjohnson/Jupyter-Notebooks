@@ -7,7 +7,7 @@ import numpy as np
 def mi_pp_anndata (data):
     print ("Converting dataframe into anndata - Annotated Data...")
     # Extract array of expression values
-    X = data.values.astype(np.int32)
+    X = data.values
     # Convert the cell names/ index into observations (obs)
     obs = pd.DataFrame()
     obs['cells'] = data.index
