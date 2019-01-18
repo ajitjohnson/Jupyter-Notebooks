@@ -13,5 +13,5 @@ def mi_pp_normalize (data, qq = 0.001):
     # Quantile normalize of each channel of users data
     lo = np.quantile(log_data, qq, axis = 0)
     hi = np.quantile(log_data, 1 - qq, axis = 0)
-    normalized_data = 2 * (log_data - lo) / (hi - lo) -1
+    normalized_data = (log_data - lo) / (hi - lo)
     return(normalized_data)
