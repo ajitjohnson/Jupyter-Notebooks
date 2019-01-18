@@ -12,9 +12,9 @@ def mi_pp_anndata (data):
     obs = pd.DataFrame()
     obs['cells'] = data.index
     # Convert the protein Markers/ genenames into variables (var)
-    var_names = list(data)
-    n_vars = len(var_names)
-    var = pd.DataFrame(index=var_names)
+    #var_names = list(data)
+    #n_vars = len(var_names)
+    var = pd.DataFrame(index=list(data))
     # Create AnnData
     adata = ad.AnnData(X, obs=obs, var=var, dtype='int32')
     return (adata)
