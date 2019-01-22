@@ -38,6 +38,14 @@ import wget
 exec(open(wget.download(file_url)).read())
 ~~~~
 
+### Preprocess CycIF data: Clean Data
+Requires a pandas dataframe with cells on rows and markers/genes on columns.
+~~~~
+file_url = 'https://raw.githubusercontent.com/ajitjohnson/Jupyter-Notebooks/master/py_scripts/mi_pp_cleandata.py'
+exec(open(wget.download(file_url)).read())
+mi_pp_cleandata (x)
+~~~~
+
 ### Preprocess CycIF data: Normalization
 Requires a pandas dataframe with cells on rows and markers/genes on columns.
 ~~~~
