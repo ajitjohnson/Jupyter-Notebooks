@@ -23,6 +23,7 @@ os.chdir("/Users/aj/Dropbox (Partners HealthCare)/Data/covid19/NHP/ARSeq/")
 os.chdir("/Users/aj/Dropbox (Partners HealthCare)/Data/covid19/NHP/ARSeq_Phospho/")
 os.chdir("/Users/aj/Dropbox (Partners HealthCare)/Data/covid19/human/proteomics/ARSeq/")
 os.chdir("/Users/aj/Dropbox (Partners HealthCare)/Data/covid19/NHP/geomx/ARSeq/")
+os.chdir("/Users/aj/Dropbox (Partners HealthCare)/Data/melanoma_rarecyte/Figures for manuscript/Fig 3 F8 analysis (Round 4)/ARSeq")
 
 os.chdir("/Users/aj/Dropbox (Partners HealthCare)/Data/covid19/NHP/geomx/")
 data = pd.read_csv("exp_q3.csv", index_col=0)
@@ -41,6 +42,9 @@ y = variance.values
 
 # Elbow finder
 kneedle = KneeLocator(x, y, S=200, curve='convex', direction='decreasing')
+
+kneedle = KneeLocator(x, y, S=2, curve='convex', direction='decreasing')
+
 
 # Plot
 kneedle.plot_knee_normalized()
