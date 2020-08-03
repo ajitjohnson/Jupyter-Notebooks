@@ -3,6 +3,8 @@
 # Set WD
 setwd("/Users/aj/Dropbox (Partners HealthCare)/Data/melanoma_rarecyte/round-5-f12-f9/f9/salmon/")
 setwd("/Users/aj/Dropbox (Partners HealthCare)/Data/melanoma_rarecyte/round-5-f12-f9/f12/salmon/")
+setwd("/Users/aj/Dropbox (Partners HealthCare)/Data/melanoma_rarecyte/round-1/salmon/")
+
 
 # Library
 library("tximport")
@@ -28,6 +30,7 @@ head(txi.tx$counts)
 # add column name
 file_names <- list.files(pattern = ".sf", recursive = TRUE)
 file_names <- str_remove(file_names, "/quant.sf")
+file_names <- str_remove(file_names, ".sf")
 
 # add columname
 data <- txi.tx$counts
