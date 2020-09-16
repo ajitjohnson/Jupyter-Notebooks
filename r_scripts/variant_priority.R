@@ -82,6 +82,18 @@ vcf_file <- "/Users/aj/Dropbox (Partners HealthCare)/Data/duvelisib_study/pdx/ex
 # Variants in all three samples
 vcf_file <- "C:/Users/ajn16/Dropbox (Partners HealthCare)/Data/duvelisib_study/pdx/exome/vechile_merged/merged VCF files/variants in all three/0000.vcf"
 
+vcf_file <- "/Users/aj/Dropbox (Partners HealthCare)/Data/duvelisib_study/clinical samples/p1_exome/1-mutect2-annotated.vcf"
+results_C1 = variant_priority(vcf_file)
+c1 = results_C1[(results_C1$passscore == 1),]
+
+vcf_file <- "/Users/aj/Dropbox (Partners HealthCare)/Data/duvelisib_study/clinical samples/p1_exome/2-mutect2-annotated.vcf"
+results_C2 = variant_priority(vcf_file)
+c2 = results_C2[(results_C2$passscore == 1),]
+
+vcf_file <- "/Users/aj/Dropbox (Partners HealthCare)/Data/duvelisib_study/clinical samples/p1_exome/3-mutect2-annotated.vcf"
+results_C3 = variant_priority(vcf_file)
+c3 = results_C3[(results_C3$passscore == 1),]
+
 
 
 # Load the differentially expressed genes
