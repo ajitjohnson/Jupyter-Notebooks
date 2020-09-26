@@ -94,6 +94,78 @@ vcf_file <- "/Users/aj/Dropbox (Partners HealthCare)/Data/duvelisib_study/clinic
 results_C3 = variant_priority(vcf_file)
 c3 = results_C3[(results_C3$passscore == 1),]
 
+# Drop the low impact variants
+c1 = c1[(c1$impact == "HIGH" | c1$impact == "MODERATE"),]
+c2 = c2[(c2$impact == "HIGH" | c2$impact == "MODERATE"),]
+c3 = c3[(c3$impact == "HIGH" | c3$impact == "MODERATE"),]
+
+# Figire for distribution of variants
+type <- data.frame(table(c3$mutation_type))
+
+ggplot(data=type, aes(x=Var1, y=Freq, fill=Var1)) +
+  geom_bar(stat="identity")+ coord_flip() + theme_minimal()+
+  theme(legend.position="none")+
+  theme(axis.text.y = element_text(face="bold",size=10),
+        axis.title.x=element_blank(),
+        axis.title.y=element_blank())+
+  annotate(geom="text", x=5, y=20, label=paste(sum(type$Freq),'variants'), fontface="bold")
+
+
+MISSENSE: a missense mutation
+INFRAME: a inframe mutation
+TRUNC: a truncation mutation
+PROMOTER: a promoter mutation
+OTHER: any other kind of mutation
+
+# Combining multiple vcf files for oncoprint
+oncoprint <- function(cleaned_vcf){
+  
+  combined_df <- data.frame()
+  
+  for (i in 1: length(cleaned_vcf)){
+    columns <- c("sample","Gene", "impact", "mutation_type")
+    temp_df <- cleaned_vcf[[i]]
+    temp_df$sample <- i
+    temp_df <- temp_df %>% select(columns)
+    combined_df <- bind_rows(combined_df, temp_df)
+  }
+  
+  # change 5 categories
+  
+  return(combined_df)
+  
+}
+cleaned_vcf <- list(c1,c2,c3)
+for_oncoprint <- oncoprint(cleaned_vcf)
+write.csv(for_oncoprint, file = "Oncoprint.csv")
+
+oncoprint <- function(cleaned_vcf){
+  combined_df <- data.frame()
+  for (i in 1: length(cleaned_vcf)){
+    temp_df <- cleaned_vcf[[i]]
+    temp_df$sample <- i
+    combined_df <- bind_rows(combined_df, temp_df)
+  }
+  
+  # change 5 categories
+  
+  return(combined_df)
+  
+}
+cleaned_vcf <- list(c1,c2,c3)
+for_oncoprint <- oncoprint(cleaned_vcf)
+write.csv(for_oncoprint, file = "Oncoprint_all.csv")
+
+
+
+setwd('/Users/aj/Dropbox (Partners HealthCare)/Data/duvelisib_study/clinical samples/p1_exome/')
+
+write.csv(c1, 'c1_vsf.csv')
+write.csv(c2, 'c2_vsf.csv')
+write.csv(c3, 'c3_vsf.csv')
+
+dim(c3)
+
 
 
 # Load the differentially expressed genes

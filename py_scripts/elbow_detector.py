@@ -24,6 +24,9 @@ os.chdir("/Users/aj/Dropbox (Partners HealthCare)/Data/covid19/NHP/ARSeq_Phospho
 os.chdir("/Users/aj/Dropbox (Partners HealthCare)/Data/covid19/human/proteomics/ARSeq/")
 os.chdir("/Users/aj/Dropbox (Partners HealthCare)/Data/covid19/NHP/geomx/ARSeq/")
 os.chdir("/Users/aj/Dropbox (Partners HealthCare)/Data/melanoma_rarecyte/Figures for manuscript/Fig 3 F8 analysis (Round 4)/ARSeq")
+os.chdir("/Users/aj/Dropbox (Partners HealthCare)/Data/covid19/human/proteomics/ARSeq/")
+
+
 
 os.chdir("/Users/aj/Dropbox (Partners HealthCare)/Data/covid19/NHP/geomx/")
 data = pd.read_csv("exp_q3.csv", index_col=0)
@@ -31,6 +34,7 @@ data = pd.read_csv("exp_q3.csv", index_col=0)
 
 # Import data
 data = pd.read_csv("normalized_data.csv", index_col=0)
+data = pd.read_csv("normalized_data_stable.csv", index_col=0)
 
 
 # calculate variance
@@ -60,7 +64,7 @@ mvg = variance[0:kneedle.elbow].index
 mvg = data.loc[mvg,:]
 
 # write out the data
-mvg.to_csv("elbow_mvg.csv")
+mvg.to_csv("mvg.csv")
 
 
 ##############################################################################
