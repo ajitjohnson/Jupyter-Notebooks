@@ -13,7 +13,7 @@ variant_priority <- function(vcf_file, SNPEff= T, COSMIC=T, DEG= NULL, PASS=T, m
   vcf_info = data.frame(vcf@fix)
 
   # Add a new column with SNPEff
-  ann_extact <- function(data, k=4){
+  ann_extact <- function(data, k=11){
     split <- str_split(as.character(data), ";")
     ANN <- grep('ANN', split[[1]], value=TRUE)
     ANN <- str_remove(ANN, "ANN=")
@@ -36,8 +36,10 @@ variant_priority <- function(vcf_file, SNPEff= T, COSMIC=T, DEG= NULL, PASS=T, m
     vcf_info$SNPEFF <- lapply(vcf_info$INFO, function(x) ann_extact(x))
     vcf_info = tidyr::unnest(vcf_info, SNPEFF)
     vcf_info$EFFECT <- vcf_info$SNPEFF
-    vcf_info = vcf_info %>% separate(SNPEFF, c("mutation", "mutation_type", "impact", "Gene"), "\\|")
-    vcf_info = subset(vcf_info, select = -c(mutation))
+    vcf_info = vcf_info %>% separate(SNPEFF, c("mutation", "mutation_type", "impact", "Gene",
+                                               "ENSEMBL_ID", "TRANSCRIPT", "ENSEMBL_ID_1",
+                                               "CODING","SOMETHING","CLINVAR","CODON_CHANGE"), "\\|")
+    vcf_info = subset(vcf_info, select = -c(mutation,TRANSCRIPT,ENSEMBL_ID_1,CODING,SOMETHING))
     # Score the impact
     impactscore <- lapply(vcf_info$impact, function(x) impact_scoring(x))
     vcf_info$impactscore <- as.numeric(impactscore)
@@ -67,7 +69,7 @@ variant_priority <- function(vcf_file, SNPEff= T, COSMIC=T, DEG= NULL, PASS=T, m
 
   # Clean the dataframe
   col = colnames(vcf_info[,(grep("EFFECT", colnames(vcf_info)) + 1): ncol(vcf_info)])
-  columns = c("Gene", "impact", "mutation_type", "ID", "CHROM", "POS", "REF", "ALT", col)
+  columns = c("Gene", "impact", "mutation_type", "ID", "CHROM", "POS", "REF", "ALT", "CLINVAR","CODON_CHANGE",col)
   if (clean == T){vcf_info = vcf_info[,columns]}
 
   # Return results
@@ -82,40 +84,6 @@ vcf_file <- "/Users/aj/Dropbox (Partners HealthCare)/Data/duvelisib_study/pdx/ex
 # Variants in all three samples
 vcf_file <- "C:/Users/ajn16/Dropbox (Partners HealthCare)/Data/duvelisib_study/pdx/exome/vechile_merged/merged VCF files/variants in all three/0000.vcf"
 
-vcf_file <- "/Users/aj/Dropbox (Partners HealthCare)/Data/duvelisib_study/clinical samples/p1_exome/1-mutect2-annotated.vcf"
-results_C1 = variant_priority(vcf_file)
-c1 = results_C1[(results_C1$passscore == 1),]
-
-vcf_file <- "/Users/aj/Dropbox (Partners HealthCare)/Data/duvelisib_study/clinical samples/p1_exome/2-mutect2-annotated.vcf"
-results_C2 = variant_priority(vcf_file)
-c2 = results_C2[(results_C2$passscore == 1),]
-
-vcf_file <- "/Users/aj/Dropbox (Partners HealthCare)/Data/duvelisib_study/clinical samples/p1_exome/3-mutect2-annotated.vcf"
-results_C3 = variant_priority(vcf_file)
-c3 = results_C3[(results_C3$passscore == 1),]
-
-# Drop the low impact variants
-c1 = c1[(c1$impact == "HIGH" | c1$impact == "MODERATE"),]
-c2 = c2[(c2$impact == "HIGH" | c2$impact == "MODERATE"),]
-c3 = c3[(c3$impact == "HIGH" | c3$impact == "MODERATE"),]
-
-# Figire for distribution of variants
-type <- data.frame(table(c3$mutation_type))
-
-ggplot(data=type, aes(x=Var1, y=Freq, fill=Var1)) +
-  geom_bar(stat="identity")+ coord_flip() + theme_minimal()+
-  theme(legend.position="none")+
-  theme(axis.text.y = element_text(face="bold",size=10),
-        axis.title.x=element_blank(),
-        axis.title.y=element_blank())+
-  annotate(geom="text", x=5, y=20, label=paste(sum(type$Freq),'variants'), fontface="bold")
-
-
-MISSENSE: a missense mutation
-INFRAME: a inframe mutation
-TRUNC: a truncation mutation
-PROMOTER: a promoter mutation
-OTHER: any other kind of mutation
 
 # Combining multiple vcf files for oncoprint
 oncoprint <- function(cleaned_vcf){

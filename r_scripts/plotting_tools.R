@@ -235,13 +235,13 @@ goi_collapsed_jitter <- function(data,meta,goi,intgroup, groups=NULL){
   d <- melt(d)
   
   # use ggpubr
-  ggbarplot(d, x = intgroup, y = "value", add = c("mean_se", "jitter"),fill = intgroup)+
-    theme(plot.title = element_text(hjust = 0.5),axis.title.x = element_blank(),
-          axis.text.x = element_text(face="bold", color="#000000", size=14),
+  ggbarplot(d, x = intgroup, y = "value", add = c("mean_se", "jitter"),fill = intgroup,width=1)+
+    theme(plot.title = element_text(hjust = 0.5,face="bold", color="#000000", size=14),
+          axis.title.x = element_blank(),
+          axis.text.x = element_text(face="bold", color="#000000", size=14,angle = 90, vjust = 0.5, hjust=1),
           axis.text.y = element_text(face="bold", color="#000000", size=14),
           axis.title.y = element_text(face="bold", color="#000000", size=14))+
-    theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))+
-    ylab("expression (log2)")
+    ylab("expression (log2)") + ggtitle(goi)
   
 }
 goi_stacked <- function(data,meta,goi,c_group='c1', p_val_pos=0,p_val_size=15,intgroup,gene_size=10,groups=NULL,order=NULL,ttest.ref.group=NULL){
@@ -615,7 +615,7 @@ arseq.pca.plot = function(dds, intgroup="arseq.group", ntop=500, pc.a= 1, pc.b =
     return(d)
   }
   
-  ggplot(data=d, aes_string(x=paste("PC",pc.a,sep = ""), y=paste("PC",pc.b,sep = ""), color="group")) + geom_point(size=5) +
+  ggplot(data=d, aes_string(x=paste("PC",pc.a,sep = ""), y=paste("PC",pc.b,sep = ""), color="group")) + geom_point(size=2) +
     xlab(paste0(paste("PC",pc.a,sep = ""),": ",round(percentVar[pc.a] * 100),"% variance")) +
     ylab(paste0(paste("PC",pc.b,sep = ""),": ",round(percentVar[pc.b] * 100),"% variance")) +
     theme_classic()+
@@ -624,13 +624,13 @@ arseq.pca.plot = function(dds, intgroup="arseq.group", ntop=500, pc.a= 1, pc.b =
                                      size=14),
           axis.text.y = element_text(face="bold", color="#1a1a1b", 
                                      size=14)) +
-    scale_color_manual(values=wes_palette(n= 5, name=wes_palette))+
+    #scale_color_manual(values=wes_palette(n= 5, name=wes_palette))+
     geom_text_repel(aes(label = .data$name),size = 5) +
     coord_fixed() + ggtitle("Principal component analysis (PCA) Plot")+
     theme(plot.title = element_text(hjust = 0.5), legend.position="bottom")
 }
 # ssgsea analysis
-ssgsea_analysis <- function(data,signature,meta=NULL,intgroup=NULL, custom_color=NULL, show_column_names=F, padding = unit(c(2, 2, 2, 60), "mm")){
+ssgsea_plot <- function(data,signature,meta=NULL,intgroup=NULL, ssgsea_score=NULL, custom_color=NULL, cluster_columns=F, show_column_names=F, padding = unit(c(2, 2, 2, 60), "mm")){
   
   # load required libraries
   require(GSEABase)
@@ -639,29 +639,38 @@ ssgsea_analysis <- function(data,signature,meta=NULL,intgroup=NULL, custom_color
   require(ComplexHeatmap)
   require(RColorBrewer)
   
-  # Make a copy of the group type
-  group <- signature[,1,drop=FALSE]
-  colnames(group) <- c('cluster')
-  # Drop the groups from signature
-  signature <- signature[,-1]
-  # transpose the signature
-  signature <- data.frame(t(signature))
-  
-  # Convert signature into a named list
-  named_list <- function(df){
-    final_list <- c()
-    for (i in 1: ncol(df)){
-      tmp <- as.character(df[,i])
-      tmp <- list(tmp[nchar(tmp) > 1])
-      names(tmp) <- colnames(df[,i,drop=F])
-      final_list <- c(final_list, tmp)
+  if(is.null(ssgsea_score)){
+    # Make a copy of the group type
+    group <- signature[,1,drop=FALSE]
+    colnames(group) <- c('cluster')
+    # Drop the groups from signature
+    signature <- signature[,-1]
+    # transpose the signature
+    signature <- data.frame(t(signature))
+    
+    # Convert signature into a named list
+    named_list <- function(df){
+      final_list <- c()
+      for (i in 1: ncol(df)){
+        tmp <- as.character(df[,i])
+        tmp <- list(tmp[nchar(tmp) > 1])
+        names(tmp) <- colnames(df[,i,drop=F])
+        final_list <- c(final_list, tmp)
+      }
+      return(final_list)
     }
-    return(final_list)
+    x = named_list (signature)
+    
+    # Run the enrichment
+    gbm_es <- gsva(as.matrix(data), x,method='ssgsea',ssgsea.norm=T)
+  } else {
+    signature <- signature [row.names(signature) %in% row.names(ssgsea_score),]
+    group <- signature[,1,drop=FALSE]
+    colnames(group) <- c('cluster')
+    gbm_es <- ssgsea_score
   }
-  x = named_list (signature)
   
-  # Run the enrichment
-  gbm_es <- gsva(as.matrix(data), x,method='ssgsea',ssgsea.norm=T)
+  
   
   # Viz using heatmap with metadata
   ssgsea_scaled = t(scale(t(gbm_es)))
@@ -698,7 +707,7 @@ ssgsea_analysis <- function(data,signature,meta=NULL,intgroup=NULL, custom_color
     draw(h1, heatmap_legend_side = "left", annotation_legend_side = "left", padding = padding)
     
   } else {
-    h1 <- Heatmap(as.matrix(ssgsea_scaled), col = h1_col, border=T, cluster_columns = F,  
+    h1 <- Heatmap(as.matrix(ssgsea_scaled), col = h1_col, border=T, cluster_columns = cluster_columns,  
                   rect_gp = gpar(col = "#22223b", lwd = 1), show_column_names = show_column_names,
                   row_names_gp = gpar(fontsize = 12), cluster_rows = T, top_annotation=col_Ann,
                   row_split = factor(group$cluster, levels = unique(group$cluster)),
@@ -708,6 +717,100 @@ ssgsea_analysis <- function(data,signature,meta=NULL,intgroup=NULL, custom_color
   }
   
 }
+# ssGSEA DE
+ssgsea_score <- function(data,signature, ssgsea_save=FALSE){
+  
+  # load required libraries
+  require(GSEABase)
+  require(GSVA)
+  require(circlize)
+  require(ComplexHeatmap)
+  require(RColorBrewer)
+  
+  #data = g_ndata
+  #signature = custom_sig
+  #meta = g_meta
+  #intgroup = 'roi'
+  #group_of_interest = 'MIS'
+  # make a copy
+  real_signature <- signature
+  
+  # Make a copy of the group type
+  group <- signature[,1,drop=FALSE]
+  colnames(group) <- c('cluster')
+  # Drop the groups from signature
+  signature <- signature[,-1]
+  # transpose the signature
+  signature <- data.frame(t(signature))
+  
+  # Convert signature into a named list
+  named_list <- function(df){
+    final_list <- c()
+    for (i in 1: ncol(df)){
+      tmp <- as.character(df[,i])
+      tmp <- list(tmp[nchar(tmp) > 1])
+      names(tmp) <- colnames(df[,i,drop=F])
+      final_list <- c(final_list, tmp)
+    }
+    return(final_list)
+  }
+  x = named_list (signature)
+  
+  # Run the enrichment
+  gbm_es <- gsva(as.matrix(data), x,method='ssgsea',ssgsea.norm=T)
+  gbm_es <- data.frame(gbm_es)
+  
+  # Save aggregate
+  if(ssgsea_save == TRUE){
+    write.csv(gbm_es, file = 'ssgsea_score.csv')
+  }
+  
+  # return modified signature
+  return(gbm_es)
+  
+}
+# ssGSEA DE finder
+ssgsea_de <- function(ssgsea_score, meta,intgroup,group_of_interest,de_cutoff=0,ssgsea_aggragate=NULL, ssgsea_aggragate_save=FALSE){
+  
+  gbm_es <- ssgsea_score
+  gbm_es_raw <- ssgsea_score
+  gbm_es <- data.frame(t(scale(t(gbm_es))))
+  
+  if(is.null(ssgsea_aggragate)){
+    # idnetify signatures that are DE's
+    gbm <- data.frame(t(gbm_es))
+    gbm <- merge(gbm, meta[,intgroup,drop=F], by = 'row.names')
+    row.names(gbm) <- gbm[,1]
+    gbm <- gbm[,-1]
+    gbm[,intgroup] <- as.factor(gbm[,intgroup])
+    names(gbm)[names(gbm) == intgroup] <- 'GROUP'
+    # aggregate
+    gbm=aggregate(.~GROUP, data=gbm, mean)
+    row.names(gbm) <- gbm[,1]
+    gbm <- gbm[,-1]
+    # Save aggregate
+    if(ssgsea_aggragate_save == TRUE){
+      write.csv(gbm, file = 'ssgsea_aggregate_score.csv')
+    }
+    
+  } else {
+    gbm <- ssgsea_aggragate
+  }
+  
+  # Find columns with mena > 0
+  gbm_group <- gbm[group_of_interest,,drop=F]
+  sigs <- gbm_group[which(gbm_group > de_cutoff)]
+  
+  # Subset ssgsea score
+  gbm_final <- data.frame(gbm_es_raw[row.names(gbm_es_raw) %in% colnames(sigs),])
+  
+  
+  # return modified signature
+  return(gbm_final)
+  
+}
+
+
 # Volcano plot
 arseq.volcano.plot <- function(deg,pCutoff=0.05,FCcutoff=1.5,colCustom=keyvals,selectLab=NULL){
   print("Generating a volcano plot between the constrast groups")
@@ -758,13 +861,17 @@ arseq.volcano.plot(deg)
 
 # Find correlation for a gene
 library(HiClimR)
+exp <- d
 g_corr = data.frame(fastCor(as.matrix(t(exp)), optBLAS = TRUE))
-goi = "S"
+goi = "IGHV3.30"
 g_goi <- g_corr[,goi,drop=F]
 g_goi <- g_goi[order(g_goi[,1],decreasing = T),,drop=F]
-head(g_goi, 20)
-tail(g_goi, 100)
-write.table(g_goi, file = "ITIH4_correlated_genes.csv", sep = ',')
+head(g_goi, 40)
+tail(g_goi, 20)
+write.table(g_goi, file = "IGHV3.30_correlated_genes.csv", sep = ',')
+
+g_goi['CD8A',]
+g_goi['CD24',]
 
 # Normal PCA
 pca <- prcomp(data.frame(t(log2(g_data))), scale. = T)
