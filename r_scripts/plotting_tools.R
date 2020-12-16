@@ -446,7 +446,6 @@ goi_fc <- function(goi, data, meta, intgroup, fc_base, groups=NULL, order=NULL){
   
   # Calculate the significant foldchanges
   
-  
   pval_calculator <- function(goi){
     x = d[,c(goi,intgroup)]
     p_value <- c()
@@ -468,6 +467,7 @@ goi_fc <- function(goi, data, meta, intgroup, fc_base, groups=NULL, order=NULL){
   names(all_pvalues) <- goi
   # convert to dataframe
   all_pvalues <- data.frame(t(data.frame(all_pvalues)))
+  
   # drop the fc_base column
   all_pvalues <- all_pvalues[ , -which(names(all_pvalues) %in% fc_base), drop=F]
   # rearrange the row names to match fc
@@ -478,12 +478,21 @@ goi_fc <- function(goi, data, meta, intgroup, fc_base, groups=NULL, order=NULL){
   
   # multiply the fc and p value to get only the significant values
   single_mat <- fc * all_pvalues
+  
+  # Convert nan to 1
+  is.nan.data.frame <- function(x)
+  do.call(cbind, lapply(x, is.nan))
+  single_mat[is.nan(single_mat)] <- NA
+  
+  is.nan.data.frame <- function(y)
+  do.call(cbind, lapply(y, is.infinite))
+  single_mat[is.nan(single_mat)] <- NA
+  
   single_mat[single_mat > 1] <- 'Sig Up'
   single_mat[single_mat < 1] <- 'Sig Down'
   # Convert NA to 0
   single_mat <- single_mat %>% mutate_all(funs(ifelse(is.na(.), 'Non-Sig', .)))
   row.names(single_mat) <- row.names(all_pvalues)
-  
   #single_mat = single_mat[!single_mat$Duvelisib %in% c('Non-Sig'),,drop=F]
   
   # Set col
@@ -493,7 +502,8 @@ goi_fc <- function(goi, data, meta, intgroup, fc_base, groups=NULL, order=NULL){
   # Heatmap of the final dataframe
   Heatmap(as.matrix(single_mat), cluster_columns = F, cluster_rows = T, col = h1_col,
           show_row_names = TRUE, na_col = "white",name='Sig FC',
-          rect_gp = gpar(col = "black", lwd = 1))
+          rect_gp = gpar(col = "black", lwd = 1),width = unit(2, "cm"),
+          column_names_gp = gpar(fontsize = 10))
   
   
   
@@ -523,8 +533,36 @@ sig_heatmap <- function(sig, data, meta, intgroup, fc_base=NULL, order=NULL, met
   col_Ann <- HeatmapAnnotation(df=col_ann, col=col_color, annotation_width=unit(c(1, 4), "cm"), gap=unit(1, "mm"))
   # Heatmap
   h2 <- goi_fc (goi=use_sig, data=data, meta=meta, intgroup=intgroup, fc_base=fc_base, order=order)
-  h1 <- Heatmap(as.matrix(data_subset_scaled), col = h1_col, cluster_columns = F, cluster_rows = T, show_row_names = T, name='z score',top_annotation=col_Ann,row_names_gp = gpar(fontsize = 8))
+  h1 <- Heatmap(as.matrix(data_subset_scaled), heatmap_width = unit(0.5, "npc"), col = h1_col, show_column_names=F, cluster_columns = F, cluster_rows = T, show_row_names = T, name='z score',top_annotation=col_Ann,row_names_gp = gpar(fontsize = 8))
   draw(h1+h2)
+  
+}
+heatmap <- function(sig, data, meta, intgroup, order=NULL, method='heatmap'){
+  require(ComplexHeatmap)
+  require(circlize)
+  require(RColorBrewer)
+  
+  # clean up the signature and find the overlap between data
+  use_sig <- sig[sig %in% row.names(data)]
+  
+  # Subset the data
+  data_subset <- data[row.names(data) %in% use_sig, ]
+  
+  # Sacle the data for heatmap
+  data_subset_scaled = t(scale(t(data_subset)))
+  # color
+  h1_col = colorRamp2(c(-2, -1, 0, 1, 2), c("#4B6AAF",  '#55B0AE', "#F8F6B8","#F5A15B","#B11E4B"))
+  #Set Column annotation 
+  col_ann <- data.frame(as.character(meta[,intgroup]))
+  colnames(col_ann) <- c('group')
+  col_color <- brewer.pal(length(unique(col_ann[,1])),"Dark2") #BrBG
+  if (length(col_color) > length(unique(col_ann[,1]))){col_color = col_color[1:length(unique(col_ann[,1]))]}
+  names(col_color) <- unique(col_ann[,1])
+  col_color <- list(group = col_color)
+  col_Ann <- HeatmapAnnotation(df=col_ann, col=col_color, annotation_width=unit(c(1, 4), "cm"), gap=unit(1, "mm"))
+  # Heatmap
+  h1 <- Heatmap(as.matrix(data_subset_scaled), heatmap_width = unit(0.5, "npc"), col = h1_col, show_column_names=F, cluster_columns = F, cluster_rows = T, show_row_names = T, name='z score',top_annotation=col_Ann,row_names_gp = gpar(fontsize = 10))
+  draw(h1)
   
 }
 # Correkation analysis
@@ -570,6 +608,28 @@ gene_corr <- function(data, meta, goi, intgroup, groups){
   return(final)
   
 }
+# correlation between two genes
+two_gene_corr <- function(data,meta,goi1,goi2,intgroup,groups=NULL){
+  require(ggplot2)
+  
+  # gene of interest
+  d <- data [row.names(data) %in% c(goi1,goi2),,drop=FALSE]
+  d <- merge(t(d), meta, by = "row.names")
+  
+  # Identify the samples of interest
+  columns_to_keep <- c(goi1,goi2, intgroup)
+  if (is.null(groups)){
+    groups = unique(d[,intgroup])
+  }
+  d <- d[d[,intgroup] %in% unlist(groups) , colnames(d) %in% columns_to_keep,drop=FALSE]
+  
+  # Draw the plot
+  ggplot(d, aes(x=d[,goi1], y=d[,goi2])) + geom_point(aes(color=d[,intgroup])) + 
+    theme_classic() + geom_smooth(method=lm,fullrange=TRUE)+
+    labs(x = goi1, y= goi2, color=intgroup)
+  
+}
+
 # PCA plot
 arseq.pca.plot = function(dds, intgroup="arseq.group", ntop=500, pc.a= 1, pc.b = 2, returnData=FALSE,wes_palette="GrandBudapest1"){
   print("Performing PCA analysis")
@@ -859,14 +919,45 @@ arseq.volcano.plot(deg,selectLab=selectLab)
 arseq.volcano.plot(deg)
 
 
+# loop through a set of markers and save a PDF file
+goi = read.csv("/Users/aj/Dropbox (Partners HealthCare)/PCA_Atlas1-2020/Data/Spatial_transcriptome/expression_profiles/6.csv", header = F)
+goi = goi$V1
+goi = c("PIK3CA")
+goi = c('MCAM', 'PMEL', 'MLANA', "TYR", "MITF", "CSPG4","S100B","SERPINE2", "CTSL","TBC1D7", "NRP2",
+        "SCD", "CDK2", "CD63", "TSPAN10", "HHLA2", "ETV5", "BCL2A1", "MITF", 
+        "PSCA", "FXYD3", "HHATL", "PYROXD2", "CSTB", "S100A4","FN1", "VIM", "CTNNB1", "DMKN", "MMP2","SPRY1",
+        "DDX58","CDKN2A", "SNAI2", "IGFBP2", "IGF1R", "COL11A1", "COL27A1","CCND1", "CDK2", "LDHB")
+
+
+somePDFPath = paste(getwd(), '/pickseq.pdf', sep="")
+pdf(file=somePDFPath)  
+for (i in goi){   
+  try(plot(goi_collapsed_jitter (data=p_ndata,meta=p_meta,goi=i,intgroup='roi')))   
+} 
+dev.off() 
+
+somePDFPath = paste(getwd(), '/geomx_1.pdf', sep="")
+pdf(file=somePDFPath)  
+for (i in goi){   
+  try(plot(goi_collapsed_jitter (data=g_ndata,meta=g_meta,goi=i,intgroup='roi')))
+} 
+dev.off() 
+
+# correla
+
+
+# subset ndata
+subset_meta <- p_meta[p_meta$roi %in% c('IT','ET'),]
+subset_ndata <- p_ndata[,colnames(p_ndata) %in% row.names(subset_meta)]
+
 # Find correlation for a gene
 library(HiClimR)
-exp <- d
+exp <- p_ndata#subset_ndata
 g_corr = data.frame(fastCor(as.matrix(t(exp)), optBLAS = TRUE))
-goi = "IGHV3.30"
+goi = "CDKN2A"
 g_goi <- g_corr[,goi,drop=F]
 g_goi <- g_goi[order(g_goi[,1],decreasing = T),,drop=F]
-head(g_goi, 40)
+head(g_goi, 20)
 tail(g_goi, 20)
 write.table(g_goi, file = "IGHV3.30_correlated_genes.csv", sep = ',')
 

@@ -6,6 +6,7 @@ setwd("/Users/aj/Dropbox (Partners HealthCare)/Data/melanoma_rarecyte/round-5-f1
 setwd("/Users/aj/Dropbox (Partners HealthCare)/Data/melanoma_rarecyte/round-1/salmon/")
 setwd("//research.files.med.harvard.edu/ImStor/sorger/data/rnaseq/ajit_johnson/covid/alignment/final")
 setwd("D:/gw/final")
+setwd("C:/Users/ajn16/Desktop/cell_line/")
 
 
 
@@ -22,7 +23,7 @@ library("stringr")
 files <- file.path(getwd(), list.files(pattern = ".sf", recursive = TRUE))
 
 # If needed
-tx2gene <- read.csv("2020-07-31_alignment/tx2gene.csv", header = F)
+tx2gene <- read.csv("C:/Users/ajn16/Dropbox (Partners HealthCare)/Data/iris/100_celllines/tx2gene.csv", header = F)
 files <- gsub("\\\\","//",files)
 files <- substring(files, 3)
 
