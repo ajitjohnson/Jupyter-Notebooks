@@ -25,24 +25,24 @@ os.chdir("/Users/aj/Dropbox (Partners HealthCare)/Data/covid19/human/proteomics/
 os.chdir("/Users/aj/Dropbox (Partners HealthCare)/Data/covid19/NHP/geomx/ARSeq/")
 os.chdir("/Users/aj/Dropbox (Partners HealthCare)/Data/melanoma_rarecyte/Figures for manuscript/Fig 3 F8 analysis (Round 4)/ARSeq")
 os.chdir("/Users/aj/Dropbox (Partners HealthCare)/Data/covid19/human/proteomics/ARSeq/")
-os.chdir("/Users/aj/Dropbox (Partners HealthCare)/Data/covid19/human/atlas/ARSeq/")
 os.chdir("/Users/aj/Dropbox (Partners HealthCare)/Data/PCA/ARSeq_geomx")
 os.chdir("/Users/aj/Dropbox (Partners HealthCare)/Data/PCA/ARSeq_pickseq")
 os.chdir("/Users/aj/Dropbox (Partners HealthCare)/Data/PCA/ARSeq_geomx/ET/")
 os.chdir("/Users/aj/Dropbox (Partners HealthCare)/Data/covid19/human/atlas/")
 os.chdir("/Users/aj/Dropbox (Partners HealthCare)/Data/endotoxin_study")
 os.chdir("/Users/aj/Dropbox (Partners HealthCare)/Data/PCA/MVG")
-
+os.chdir("/Users/aj/Dropbox (Partners HealthCare)/COVID-HumanDecedentMS-Oct2020/MN/mass_spec/")
+os.chdir("/Users/aj/Dropbox (Partners HealthCare)/Data/covid19/human/atlas/ARSeq/")
 
 
 # Import data
 data = pd.read_csv("normalized_data.csv", index_col=0)
 data = pd.read_csv("normalized_data_stable.csv", index_col=0)
 data = pd.read_csv("et.csv", index_col=0)
-data = pd.read_csv("combat_normalized_data.csv", index_col=0)
 data = pd.read_csv("data.csv", index_col=0)
 data = pd.read_csv("tumor_only.csv", index_col=0)
 data = pd.read_csv("exophytic_geo.csv", index_col=0) #
+data = pd.read_csv("combat_adjusted.csv", index_col=0)
 
 
 # calculate variance
@@ -53,7 +53,7 @@ x = np.array(list(range(len(variance))))
 y = variance.values
 
 # Elbow finder
-kneedle = KneeLocator(x, y, S=5, curve='convex', direction='decreasing')
+kneedle = KneeLocator(x, y, S=50, curve='convex', direction='decreasing')
 
 kneedle = KneeLocator(x, y, S=2, curve='convex', direction='decreasing')
 

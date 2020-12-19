@@ -17,9 +17,11 @@ variant_priority <- function(vcf_file, SNPEff= T, COSMIC=T, DEG= NULL, PASS=T, m
     split <- str_split(as.character(data), ";")
     ANN <- grep('ANN', split[[1]], value=TRUE)
     ANN <- str_remove(ANN, "ANN=")
+    #ANN_SUB <- str_split(ANN, ";")
     ANN_SUB <- str_split(ANN, ",")
     ANN_SUB <- do.call(paste, c(read.table(text = ANN_SUB[[1]], sep = "|")[1:k], sep = "|"))
     return(ANN_SUB)}
+  
   # SNPEff Impact scoring
   impact_scoring <- function(data){
     score = c()
@@ -81,9 +83,11 @@ variant_priority <- function(vcf_file, SNPEff= T, COSMIC=T, DEG= NULL, PASS=T, m
 # Load VCF file
 vcf_file <- "C:/Users/ajn16/Dropbox (Partners HealthCare)/Data/duvelisib_study/pdx/exome/vechile_merged/merged VCF files/two or more variants/0000.vcf"
 vcf_file <- "/Users/aj/Dropbox (Partners HealthCare)/Data/duvelisib_study/pdx/exome/vechile_merged/merged VCF files/two or more variants/0000.vcf"
-# Variants in all three samples
-vcf_file <- "C:/Users/ajn16/Dropbox (Partners HealthCare)/Data/duvelisib_study/pdx/exome/vechile_merged/merged VCF files/variants in all three/0000.vcf"
+vcf_file <- "/Users/aj/Dropbox (Partners HealthCare)/Data/duvelisib_study/pdx/exome/exome_analysis_trial_2_12172020/mutations/Da-mutect2-annotated.vcf"
 
+
+# run vcf priority scoring
+Da <- variant_priority(vcf_file, SNPEff= T, COSMIC=T, DEG= NULL, PASS=T, minAF=T, clean=T)
 
 # Combining multiple vcf files for oncoprint
 oncoprint <- function(cleaned_vcf){

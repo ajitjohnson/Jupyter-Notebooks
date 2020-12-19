@@ -920,14 +920,8 @@ arseq.volcano.plot(deg)
 
 
 # loop through a set of markers and save a PDF file
-goi = read.csv("/Users/aj/Dropbox (Partners HealthCare)/PCA_Atlas1-2020/Data/Spatial_transcriptome/expression_profiles/6.csv", header = F)
+goi = read.csv("/Users/aj/Dropbox (Partners HealthCare)/Data/PCA/signatures/all_stained_markers.csv", header = F)
 goi = goi$V1
-goi = c("PIK3CA")
-goi = c('MCAM', 'PMEL', 'MLANA', "TYR", "MITF", "CSPG4","S100B","SERPINE2", "CTSL","TBC1D7", "NRP2",
-        "SCD", "CDK2", "CD63", "TSPAN10", "HHLA2", "ETV5", "BCL2A1", "MITF", 
-        "PSCA", "FXYD3", "HHATL", "PYROXD2", "CSTB", "S100A4","FN1", "VIM", "CTNNB1", "DMKN", "MMP2","SPRY1",
-        "DDX58","CDKN2A", "SNAI2", "IGFBP2", "IGF1R", "COL11A1", "COL27A1","CCND1", "CDK2", "LDHB")
-
 
 somePDFPath = paste(getwd(), '/pickseq.pdf', sep="")
 pdf(file=somePDFPath)  
@@ -936,7 +930,7 @@ for (i in goi){
 } 
 dev.off() 
 
-somePDFPath = paste(getwd(), '/geomx_1.pdf', sep="")
+somePDFPath = paste(getwd(), '/geomx.pdf', sep="")
 pdf(file=somePDFPath)  
 for (i in goi){   
   try(plot(goi_collapsed_jitter (data=g_ndata,meta=g_meta,goi=i,intgroup='roi')))
