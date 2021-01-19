@@ -1,0 +1,151 @@
+Processing pickseq data received from the core
+@author: Ajit Johnson Nirmal
+Created on Wed Jan 13 17:21:47 2021
+
+
+The raw FASTQ files were stored at 
+`/n/scratch3/users/a/ajn16/pickseq/raw`
+
+### Part-1
+
+It looks like there are multiple files per sample and so we will need to merge them first. We need only one forward read and one reverse read file per sample.  
+
+`bcbio` provides an easy function to do meging of fastq files. In order to use that function we need to provide an input csv file that contains the mapping between the file name and the sample it belongs to. 
+
+Fist I am going to print all the files (along with path) in the `raw` directory into a `.csv` file and then edit the .csv file to include an additional column that realtes the sample name to the sample they belong to. 
+
+```
+(echo 'samplename'; for f in raw/*; do readlink -f $f ; done) > merge.csv
+```
+
+You can now either download this file to local computer and edit it or just use something like `vim` a bash editor to edit it directly on O2. Here is snapshot of how the first 6 line looks like after I edited it. Save the file within the `raw` directory.
+
+```
+samplename,description
+/n/scratch3/users/a/ajn16/pickseq/raw/B1_S1_L001_R1_001.fastq.gz,B1_R1
+/n/scratch3/users/a/ajn16/pickseq/raw/B1_S1_L001_R2_001.fastq.gz,B1_R2
+/n/scratch3/users/a/ajn16/pickseq/raw/B1_S1_L002_R1_001.fastq.gz,B1_R1
+/n/scratch3/users/a/ajn16/pickseq/raw/B1_S1_L002_R2_001.fastq.gz,B1_R2
+/n/scratch3/users/a/ajn16/pickseq/raw/B2_S2_L001_R1_001.fastq.gz,B2_R1
+/n/scratch3/users/a/ajn16/pickseq/raw/B2_S2_L001_R2_001.fastq.gz,B2_R2
+```
+
+As you can see I have a added a new column called `description` and I have grouped all the `B1` samples into `B1_R1`  and `B1_R2` respectively. When the merging is complete, for sample `B1` we will have only two files (i.e `B1_R1` and `B1_R2`). 
+
+Next let's submit the job to `O2` for merging the files. In order to do so, create a sbatch script:`vim merge_job.sh` and paste the following and save it.
+
+```
+#!/bin/sh
+#SBATCH -p priority
+#SBATCH -J merge
+#SBATCH -o run.o
+#SBATCH -e run.e
+#SBATCH -t 0-3:00
+#SBATCH --cpus-per-task=20
+#SBATCH --mail-type=END         
+#SBATCH --mail-user=ajitj_nirmal@dfci.harvard.edu
+
+module load bcbio/latest
+cd raw
+bcbio_prepare_samples.py --out merged --csv merge.csv 
+```
+
+Submit the job
+`sbatch merge_job.sh`
+
+This is going to create a folder called `merged` and save all the merged files in there. It is now time to rest and then have some tea (I mean do other work :P ). 
+
+
+### Part-2
+
+I am going to move the merged folder outside to the main folder, not necessary- I just like it that way
+
+```
+mv merged ../
+```
+
+Similar to what we did for merging the samples, we need to generate another `.csv` file that contains the sample information. So lets do the exact same thing. 
+
+```
+(echo 'samplename'; for f in merged/*; do readlink -f $f ; done) > alignment.csv
+```
+
+Now as previously edit the file and add a `description` column. BTW, I generally delete the reverse strand file for all samples in the `.csv` file as bcbio automatically maches the names and finds the matching reverse files. There is no harm in leaving them inside the file as well. 
+
+Here is how the file look like now (first couple of line) 
+note: how I have removed all the `_R2` files!!
+
+```
+samplename,description
+/n/scratch3/users/a/ajn16/pickseq/merged/B1_R1.fastq.gz,B1
+/n/scratch3/users/a/ajn16/pickseq/merged/B2_R1.fastq.gz,B2
+/n/scratch3/users/a/ajn16/pickseq/merged/B3_R1.fastq.gz,B3
+/n/scratch3/users/a/ajn16/pickseq/merged/B4_R1.fastq.gz,B4
+/n/scratch3/users/a/ajn16/pickseq/merged/B5_R1.fastq.gz,B5
+```
+
+Now that we have the sample description file, next we need to prepare an alignment configuration file. We will need to generate this file in `YAML` format and it will contain all the information that is required for bcbio to figure out what it needs to do. Like which alignment tool to use and its settings and so on. 
+
+
+Create the YAML file`vim O2.yaml` and paste the below configuration into it and save it. Since `bcbio` already has some common model organisms reference genomes build in, I am not providing that file. However, if you want it to be aligned to a specific genome of your interest, you can always pass that file in. 
+
+
+```
+details:
+  - analysis: RNA-seq
+    genome_build: mm10
+    algorithm:
+      aligner: hisat2
+      strandedness: unstranded
+upload:
+  dir: ../final
+```
+
+We are almost done.
+
+Finally we just need to intiate bcbio to create a YAML configuration for each sample. 
+
+```
+module load bcbio/latest
+bcbio_nextgen.py -w template O2.yaml alignment.csv merged/
+```
+
+`bcbio` will spit out the location of the generated `YAML` file. I generally open it and check if it looks alright. Look for things like if it has identified the right reverse pair file for each sample and if the details you provided in the configuration file is all there and so on. 
+
+
+Final step is to create a job and submit it to `O2`. As previously, we need to create an `sbatch` script and we are ready to submit. 
+
+`vim submit_bcbio.sh`
+
+```
+#!/bin/sh
+#SBATCH -p priority
+#SBATCH -J pickseq
+#SBATCH -o run.o
+#SBATCH -e run.e
+#SBATCH -t 2-00:00
+#SBATCH --cpus-per-task=20
+#SBATCH --mem=150G
+#SBATCH --mail-type=END         
+#SBATCH --mail-user=ajitj_nirmal@dfci.harvard.edu 
+
+export PATH=/n/app/bcbio/tools/bin:$PATH
+bcbio_nextgen.py ../config/alignment.yaml \
+    -n 24 -t local
+```
+
+**Submit job to O2 for processing**
+
+cp submit_bcbio.sh alignment/work
+cd alignment/work
+sbatch submit_bcbio.sh
+
+
+
+
+
+
+
+
+
+

@@ -32,7 +32,7 @@ os.chdir("/Users/aj/Dropbox (Partners HealthCare)/Data/covid19/human/atlas/")
 os.chdir("/Users/aj/Dropbox (Partners HealthCare)/Data/endotoxin_study")
 os.chdir("/Users/aj/Dropbox (Partners HealthCare)/Data/PCA/MVG")
 os.chdir("/Users/aj/Dropbox (Partners HealthCare)/COVID-HumanDecedentMS-Oct2020/MN/mass_spec/")
-os.chdir("/Users/aj/Dropbox (Partners HealthCare)/Data/covid19/human/atlas/ARSeq/")
+os.chdir("/Volumes/SSD/Dropbox (Partners HealthCare)/Data/covid19/human/atlas/ARSeq/")
 
 
 # Import data
@@ -42,7 +42,7 @@ data = pd.read_csv("et.csv", index_col=0)
 data = pd.read_csv("data.csv", index_col=0)
 data = pd.read_csv("tumor_only.csv", index_col=0)
 data = pd.read_csv("exophytic_geo.csv", index_col=0) #
-data = pd.read_csv("combat_adjusted.csv", index_col=0)
+data = pd.read_csv("combat_adjusted_minimal.csv", index_col=0)
 
 
 # calculate variance

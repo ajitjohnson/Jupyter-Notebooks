@@ -116,7 +116,7 @@ goi_plot <- function(data,meta,goi,intgroup, wes_palette="GrandBudapest1"){
     #scale_fill_manual(values=c("#BFBFBF", "#6C7A89"))+
     #scale_fill_brewer(palette="Greys")+
     theme(legend.position="bottom", axis.text.x = element_text(angle = 90, hjust = 1))+
-    labs(y = "Counts")
+    labs(y = "Log2")
 }
 goi_line <- function(data,meta,goi,intgroup,groups=NULL,palette='Dark2',order=NULL,yaxis_text="Log2 Expression"){
   require(ggplot2)
@@ -559,6 +559,7 @@ heatmap <- function(sig, data, meta, intgroup, order=NULL, method='heatmap'){
   if (length(col_color) > length(unique(col_ann[,1]))){col_color = col_color[1:length(unique(col_ann[,1]))]}
   names(col_color) <- unique(col_ann[,1])
   col_color <- list(group = col_color)
+  #col_color <- col_color[-1]
   col_Ann <- HeatmapAnnotation(df=col_ann, col=col_color, annotation_width=unit(c(1, 4), "cm"), gap=unit(1, "mm"))
   # Heatmap
   h1 <- Heatmap(as.matrix(data_subset_scaled), heatmap_width = unit(0.5, "npc"), col = h1_col, show_column_names=F, cluster_columns = F, cluster_rows = T, show_row_names = T, name='z score',top_annotation=col_Ann,row_names_gp = gpar(fontsize = 10))
@@ -870,9 +871,71 @@ ssgsea_de <- function(ssgsea_score, meta,intgroup,group_of_interest,de_cutoff=0,
   
 }
 
+# SSGSEA maaping to binary clinical phenotypes
+ssgsea_binary_phenotype_corr <- function(data,signature,meta,min.sz=5){
+  
+  # pre-requisite
+  # pass the signature as a dataframe (example: directly from GSEA website)
+  # the phenotype needs to be binary (0-not active, 1- active), NA is allowed. Samples with NA will be filtered
+  
+  # Sig: 
+  # signature <-  read.csv(file= "/Volumes/SSD/Dropbox (Partners HealthCare)/Data/covid19/signatures/msigdb.v7.2.symbols.csv", header = F, row.names=1, check.names = F)
+  
+  # usage
+  # df <- ssgsea_binary_phenotype_corr(data=ndata,signature=signature,meta=clinical_meta,min.sz=5)
+  
+  # load required libraries
+  require(GSEABase)
+  require(GSVA)
+  
+  # Make a copy of the group type
+  group <- signature[,1,drop=FALSE]
+  colnames(group) <- c('cluster')
+  # Drop the groups from signature
+  signature <- signature[,-1]
+  # transpose the signature
+  signature <- data.frame(t(signature))
+  
+  # Convert signature into a named list
+  named_list <- function(df){
+    final_list <- c()
+    for (i in 1: ncol(df)){
+      tmp <- as.character(df[,i])
+      tmp <- list(tmp[nchar(tmp) > 1])
+      names(tmp) <- colnames(df[,i,drop=F])
+      final_list <- c(final_list, tmp)
+    }
+    return(final_list)
+  }
+  x = named_list (signature)
+  
+  # Run the enrichment
+  gbm_es <- gsva(as.matrix(data), x,method='ssgsea',ssgsea.norm=T, min.sz = min.sz)
+  gbm_es <- data.frame(gbm_es)
+  colnames(gbm_es) <- colnames(data)
+  
+  # Perform a t-test to check if the enrichment score is different between clinical groups
+  pval = list()
+  for (i in 1: ncol(meta)){
+    print(paste ('Processing', colnames(meta[i])))
+    # Find the samples that are postive or negative for the given phenotype
+    pos = row.names(subset(meta, meta[,i,drop=F] == 1))
+    neg = row.names(subset(meta, meta[,i,drop=F] == 0))
+    # calculate p value 
+    pval[i] = list(apply(gbm_es, 1, function(x) t.test(x[pos],x[neg])$p.value))
+  }
+  # collapse the list to a dataframe
+  df <- data.frame(matrix(unlist(pval), nrow=nrow(gbm_es), byrow=F),stringsAsFactors=FALSE)
+  row.names(df) <- row.names(gbm_es)
+  colnames(df) <- colnames(meta)
+  
+  # return
+  return(df)
+  
+}
 
 # Volcano plot
-arseq.volcano.plot <- function(deg,pCutoff=0.05,FCcutoff=1.5,colCustom=keyvals,selectLab=NULL){
+arseq.volcano.plot <- function(deg,pCutoff=0.05,FCcutoff=1,colCustom=keyvals,selectLab=NULL){
   print("Generating a volcano plot between the constrast groups")
   require(EnhancedVolcano)
   deg.volcano <- data.frame(deg)[complete.cases(data.frame(deg)),]
@@ -892,8 +955,7 @@ arseq.volcano.plot <- function(deg,pCutoff=0.05,FCcutoff=1.5,colCustom=keyvals,s
                   labSize = 4.0,
                   pointSize = 2.0,
                   colAlpha = 1,
-                  legend=c('NS','3 Log2 FC','Adj P-value (<0.005)',
-                           'Adj P-value (<0.005) & 3 Log2 FC'),
+                  #legend=c('NS','3 Log2 FC','Adj P-value (<0.005)','Adj P-value (<0.005) & 3 Log2 FC'),
                   legendPosition = 'right',
                   drawConnectors = TRUE,
                   widthConnectors = 0.2,
@@ -902,20 +964,20 @@ arseq.volcano.plot <- function(deg,pCutoff=0.05,FCcutoff=1.5,colCustom=keyvals,s
 }
 
 # Accessories
-deg <- read.csv(file= "ARSeq/covid vs control/Differential expression/covid vs control.csv", header = T, check.names=F, row.names = 1)
+deg <- read.csv(file= "ARSeq/Microthrombi/Differential expression/Y vs N.csv", header = T, check.names=F, row.names = 1)
 deg.volcano <- data.frame(deg)[complete.cases(data.frame(deg)),]
 # Run the function (https://github.com/ajitjohnson/arseq/blob/master/R/arseq.volcano.plot.R)
-keyvals <- ifelse(deg.volcano$log2FoldChange < -1.5 & deg.volcano$padj < 0.05, '#AA735B', 
-                  ifelse(deg.volcano$log2FoldChange > 1.5  & deg.volcano$padj < 0.05, '#AA735B',
-                         ifelse(deg.volcano$log2FoldChange < -1.5  & deg.volcano$padj > 0.05, '#92c5de',
-                                ifelse(deg.volcano$log2FoldChange > 1.5  & deg.volcano$padj > 0.05, '#92c5de','#D3D3D3'))))
+keyvals <- ifelse(deg.volcano$log2FoldChange < -1 & deg.volcano$padj < 0.05, '#AA735B', 
+                  ifelse(deg.volcano$log2FoldChange > 1  & deg.volcano$padj < 0.05, '#AA735B',
+                         ifelse(deg.volcano$log2FoldChange < -1  & deg.volcano$padj > 0.05, '#92c5de',
+                                ifelse(deg.volcano$log2FoldChange > 1  & deg.volcano$padj > 0.05, '#92c5de','#D3D3D3'))))
 keyvals[is.na(keyvals)] <- '#D3D3D3'
-names(keyvals)[keyvals == '#AA735B'] <- '1.5 Log2 FC & Padj < 0.05'
-names(keyvals)[keyvals == '#92c5de'] <- '1.5 Log2 FC'
+names(keyvals)[keyvals == '#AA735B'] <- '1 Log2 FC & Padj < 0.05'
+names(keyvals)[keyvals == '#92c5de'] <- '1 Log2 FC'
 names(keyvals)[keyvals == '#D3D3D3'] <- 'NS'
 
 # Plots
-arseq.volcano.plot(deg,selectLab=selectLab)
+#arseq.volcano.plot(deg,selectLab=selectLab)
 arseq.volcano.plot(deg)
 
 

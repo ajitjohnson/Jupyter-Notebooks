@@ -1,0 +1,62 @@
+Processing RNASeq data
+@author: Ajit Johnson Nirmal
+Created on Tue Jan 19 12:03:47 2021
+
+#### Move all the files fom inside a folder to outside and remove empty folders
+
+```
+find . -name '*.fq.gz' -exec mv {} . \;
+find . -depth -type d -empty -exec rmdir {} \;
+```
+
+####  Create a sample description file and edit to include metadata regarding the samples
+
+```
+(echo 'samplename'; for f in raw/*; do readlink -f $f ; done) > alignment.csv
+```
+
+#### Prepare the O2.yaml file
+
+```
+details:
+  - analysis: RNA-seq
+    genome_build: hg38
+    algorithm:
+      aligner: hisat2
+      strandedness: unstranded
+upload:
+  dir: ../final
+```
+
+#### Intiate bcBio
+```
+module load bcbio/latest
+bcbio_nextgen.py -w template O2.yaml alignment.csv raw/
+```
+
+#### Create Submission script to O2
+
+```
+#!/bin/sh
+#SBATCH -p priority
+#SBATCH -J RNASeq
+#SBATCH -o run.o
+#SBATCH -e run.e
+#SBATCH -t 2-00:00
+#SBATCH --cpus-per-task=20
+#SBATCH --mem=150G
+#SBATCH --mail-type=END         
+#SBATCH --mail-user=ajitj_nirmal@dfci.harvard.edu 
+
+export PATH=/n/app/bcbio/tools/bin:$PATH
+bcbio_nextgen.py ../config/alignment.yaml \
+    -n 24 -t local
+```
+
+#### Submit job to O2 for processing
+
+```
+cp submit_bcbio.sh alignment/work
+cd alignment/work
+sbatch submit_bcbio.sh
+```

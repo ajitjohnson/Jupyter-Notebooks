@@ -54,7 +54,7 @@ variant_priority <- function(vcf_file, SNPEff= T, COSMIC=T, DEG= NULL, PASS=T, m
   if (PASS==T){vcf_info$passscore <- ifelse(grepl("PASS", vcf_info$FILTER), 1, 0)}
 
   # Scoring mimimum allele frequency
-  if (PASS==T){vcf_info$minaf <- ifelse(grepl("MinAF", vcf_info$FILTER), 1, 0)}
+  if (minAF==T){vcf_info$minaf <- ifelse(grepl("MinAF", vcf_info$FILTER), -1, 0)}
 
   # Scoring Differentially expressed genes
   if (!is.null(DEG)){vcf_info$degscore <- ifelse((vcf_info$Gene %in% DEG), 1, 0)}
