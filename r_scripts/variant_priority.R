@@ -21,7 +21,7 @@ variant_priority <- function(vcf_file, SNPEff= T, COSMIC=T, DEG= NULL, PASS=T, m
     ANN_SUB <- str_split(ANN, ",")
     ANN_SUB <- do.call(paste, c(read.table(text = ANN_SUB[[1]], sep = "|")[1:k], sep = "|"))
     return(ANN_SUB)}
-  
+
   # SNPEff Impact scoring
   impact_scoring <- function(data){
     score = c()
@@ -78,22 +78,52 @@ variant_priority <- function(vcf_file, SNPEff= T, COSMIC=T, DEG= NULL, PASS=T, m
   return(vcf_info)
 
 }
+cnv_vcf_splitter <- function (vcf_file){
+
+  require(vcfR) # Load the necessary packages
+  require(stringr)
+  require(tidyr)
+  require(dplyr)
+
+  # Load data
+  vcf <- read.vcfR( vcf_file, verbose = FALSE)
+
+  # Create a dataframe
+  vcf_info = data.frame(vcf@fix)
+
+  # Add a new column with SNPEff
+  ann_extact <- function(data){
+    split <- str_split(as.character(data), ";")
+    s = sub("\\ANN.*", "", split[[1]])
+    return(s)}
+
+  # Apply the function
+  vcf_info$Other <- lapply(vcf_info$INFO, function(x) ann_extact(x))
+  keeps <- c("CHROM","POS","ID","REF","ALT","QUAL","FILTER","Other")
+  vcf_info <- vcf_info[keeps]
+  vcf_info = tidyr::unnest_wider(vcf_info, Other)
+
+  #return
+  return(vcf_info)
+}
 
 
 # Load VCF file
 vcf_file <- "C:/Users/ajn16/Dropbox (Partners HealthCare)/Data/duvelisib_study/pdx/exome/vechile_merged/merged VCF files/two or more variants/0000.vcf"
 vcf_file <- "/Users/aj/Dropbox (Partners HealthCare)/Data/duvelisib_study/pdx/exome/vechile_merged/merged VCF files/two or more variants/0000.vcf"
 vcf_file <- "/Users/aj/Dropbox (Partners HealthCare)/Data/duvelisib_study/pdx/exome/exome_analysis_trial_2_12172020/mutations/Da-mutect2-annotated.vcf"
-
+vcf_file <- "/Users/aj/Dropbox (Partners HealthCare)/Data/tmp/cnv_kristen/D-gatk-cnv.vcf"
+vcf_file <- "/Users/aj/Dropbox (Partners HealthCare)/Data/tmp/cnv_kristen/B-gatk-cnv.vcf"
 
 # run vcf priority scoring
 Da <- variant_priority(vcf_file, SNPEff= T, COSMIC=T, DEG= NULL, PASS=T, minAF=T, clean=T)
+Da <- cnv_vcf_splitter (vcf_file)
 
 # Combining multiple vcf files for oncoprint
 oncoprint <- function(cleaned_vcf){
-  
+
   combined_df <- data.frame()
-  
+
   for (i in 1: length(cleaned_vcf)){
     columns <- c("sample","Gene", "impact", "mutation_type")
     temp_df <- cleaned_vcf[[i]]
@@ -101,11 +131,11 @@ oncoprint <- function(cleaned_vcf){
     temp_df <- temp_df %>% select(columns)
     combined_df <- bind_rows(combined_df, temp_df)
   }
-  
+
   # change 5 categories
-  
+
   return(combined_df)
-  
+
 }
 cleaned_vcf <- list(c1,c2,c3)
 for_oncoprint <- oncoprint(cleaned_vcf)
@@ -118,23 +148,22 @@ oncoprint <- function(cleaned_vcf){
     temp_df$sample <- i
     combined_df <- bind_rows(combined_df, temp_df)
   }
-  
+
   # change 5 categories
-  
+
   return(combined_df)
-  
+
 }
 cleaned_vcf <- list(c1,c2,c3)
 for_oncoprint <- oncoprint(cleaned_vcf)
 write.csv(for_oncoprint, file = "Oncoprint_all.csv")
 
 
-
+# write
 setwd('/Users/aj/Dropbox (Partners HealthCare)/Data/duvelisib_study/clinical samples/p1_exome/')
-
 write.csv(c1, 'c1_vsf.csv')
 write.csv(c2, 'c2_vsf.csv')
-write.csv(c3, 'c3_vsf.csv')
+write.csv(Da, '/Users/aj/Dropbox (Partners HealthCare)/Data/tmp/cnv_kristen/D_vcf_info.csv')
 
 dim(c3)
 

@@ -1,0 +1,136 @@
+## TCR Seq Alignment using MIXCR
+
+Softwared stored at:
+`/home/ajn16/softwares/mixcr`
+
+#### Compute node
+`srun --pty -p interactive --mem 16G -t 0-06:00 /bin/bash`
+
+#### submit as a job
+
+`vim job_submit.sh`
+
+```
+#!/bin/sh
+#SBATCH -p priority
+#SBATCH -J TCR
+#SBATCH -o run.o
+#SBATCH -e run.e
+#SBATCH -t 0-10:00
+#SBATCH --mem=64G                       
+#SBATCH --mail-type=END         
+#SBATCH --mail-user=ajitj_nirmal@dfci.harvard.edu
+
+module load java/jdk-1.8u112
+/home/ajn16/softwares/mixcr/mixcr analyze shotgun \
+                                    --species hs \
+                                    --starting-material rna \
+                                    --only-productive \
+                                    --assemble "-ObadQualityThreshold=10" \
+                                    /n/scratch3/users/a/ajn16/tcr/raw/DFTL-28776-V1_R1.fastq.gz \
+                                    /n/scratch3/users/a/ajn16/tcr/raw/DFTL-28776-V1_R2.fastq.gz \
+                                    analysis
+
+```
+
+## Running multiple samples at the same time
+
+#### Generate a CSV files to pair up the right fastq files
+Add a `description` column to give sample names
+```
+(echo 'samplename'; for f in raw/*; do readlink -f $f ; done) > sample_prep.csv
+```
+
+#### Create a template sbatch script
+
+`vim sbatch_template.sh`
+
+```
+#!/bin/sh
+#SBATCH -p short
+#SBATCH -t 0-10:00
+#SBATCH --mem=64G      
+
+module load java/jdk-1.8u112
+/home/ajn16/softwares/mixcr/mixcr analyze shotgun \
+                                    --species hs \
+                                    --starting-material rna \
+                                    --only-productive \
+                                    ${read_1} \
+                                    ${read_2} \
+                                    ${name}
+
+```
+
+#### Create a python script to serially submit all the jobs
+
+`vim submitter.py'
+
+```
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""
+Created on Thu Apr  1 19:53:17 2021
+@author: aj
+"""
+
+# %% Lib
+import sys
+import os
+import pandas as pd
+import subprocess
+
+# %% WD
+#cwd = os.getcwd()
+
+# %% Import parameters
+csv_file =  sys.argv[1] # prints python_script.py
+
+
+# %% Data
+# read the CSV file
+#config = pd.read_csv(str(cwd) + '/' + str(csv_file))
+config = pd.read_csv(csv_file)
+
+try:
+    # convert the description column to catergory
+    config['description'] = config['description'].astype('category')
+    
+    for i in config['description'].cat.categories:
+        read_1 = config[config['description'] == i]['samplename'].iloc[0]
+        read_2 = config[config['description'] == i]['samplename'].iloc[1]
+        name = i
+        # sumbit command
+        submit_command = ("sbatch " + "--job-name=" + str(name) +
+                " --export=name=" + str(name) + ',' +          
+                "read_1=" + str(read_1) + ',' +
+                "read_2=" + str(read_2) + " sbatch_template.sh")
+        #print(submit_command)
+        # submit job
+        exit_status = subprocess.call(submit_command, shell=True)
+        if exit_status is 1:  # Check to make sure the job submitted
+            print("Job" + str(name) + "failed to submit")
+    
+except Exception:
+    pass   
+
+```
+
+#### Submit job
+
+```
+python submitter.py /n/scratch3/users/a/ajn16/pca/sample_prep.csv
+```
+
+
+
+
+
+
+
+
+
+
+
+
+

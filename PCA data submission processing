@@ -1,0 +1,86 @@
+### Some scripts for copying and changing names in windows powershell
+
+```
+# copy only required files
+Get-Content samples.csv  | ForEach {Copy-Item D:\merged\$_ D:\temp }
+
+
+# Rename using CSV (First column name: Name: Second column name: NewName)
+# import the CSV and its data
+$csv   = Import-Csv "$env:D:\temp\MyFileList.csv"
+
+# set the location to the location where the files are
+push-location "$env:D:\temp"
+
+foreach($file in $csv){
+    # test if it can find the filename
+    if(test-path $file.name){
+        # if filename found, rename it
+        rename-item $file.name -NewName $file.newname -Verbose
+    }
+    else{
+        # if not found, write error
+        write-warning "File '$($file.name)' not found"
+    }
+}
+
+# release the location and go back to the original location
+pop-location
+
+
+
+```
+
+### Resubmitting the FASTQ files for aligning to the GDC specified requirements 
+
+```
+(echo 'samplename'; for f in raw/*; do readlink -f $f ; done) > alignment.csv
+```
+
+#### Prepare the O2.yaml file
+
+```
+details:
+  - analysis: RNA-seq
+    genome_build: GDC
+    algorithm:
+      aligner: star
+      strandedness: unstranded
+upload:
+  dir: ../final
+```
+
+
+#### Intiate bcBio
+```
+module load bcbio/latest
+bcbio_nextgen.py -w template O2.yaml alignment.csv raw/
+```
+
+#### Create Submission script to O2
+
+```
+#!/bin/sh
+#SBATCH -p priority
+#SBATCH -J RNASeq
+#SBATCH -o run.o
+#SBATCH -e run.e
+#SBATCH -t 3-00:00
+#SBATCH --cpus-per-task=20
+#SBATCH --mem=150G
+#SBATCH --mail-type=END         
+#SBATCH --mail-user=ajitj_nirmal@dfci.harvard.edu 
+
+export PATH=/n/app/bcbio/tools/bin:$PATH
+bcbio_nextgen.py ../config/alignment.yaml \
+    -n 24 -t local
+```
+
+#### Submit job to O2 for processing
+
+```
+cp submit_bcbio.sh alignment/work
+cd alignment/work
+sbatch submit_bcbio.sh
+```
+
