@@ -1,0 +1,66 @@
+## Prepare the data
+
+(echo 'samplename'; for f in raw/*; do readlink -f $f ; done) > alignment.csv
+
+
+## Configuration file
+
+`vim o2.yaml`
+
+```
+details:
+  - analysis: RNA-seq
+    genome_build: hg38
+    algorithm:
+      aligner: star
+      expression_caller:
+      - salmon
+      - kallisto
+      strandedness: unstranded
+      quantify_genome_alignments: true
+    resources:
+      salmon:
+        options: ["--minAssignedFrags", "1"]
+        
+upload:
+  dir: ../final
+```
+
+
+## Intiate bcbio
+
+```
+module load bcbio/latest
+bcbio_nextgen.py -w template o2.yaml alignment.csv raw/
+```
+
+## Submission script
+
+`vim submit_bcbio.sh`
+
+```
+#!/bin/sh
+#SBATCH -p priority
+#SBATCH -J pickseq
+#SBATCH -o run.o
+#SBATCH -e run.e
+#SBATCH -t 2-00:00
+#SBATCH --cpus-per-task=20
+#SBATCH --mem=150G
+#SBATCH --mail-type=END         
+#SBATCH --mail-user=ajitj_nirmal@dfci.harvard.edu 
+
+export PATH=/n/app/bcbio/tools/bin:$PATH
+bcbio_nextgen.py ../config/alignment.yaml \
+    -n 24 -t local
+```
+
+**Submit job to O2 for processing**
+
+cp submit_bcbio.sh alignment/work
+cd alignment/work
+sbatch submit_bcbio.sh
+
+
+
+

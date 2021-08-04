@@ -1000,12 +1000,18 @@ arseq.volcano.plot(deg)
 goi = read.csv("/Users/aj/Dropbox (Partners HealthCare)/Data/PCA/signatures/all_stained_markers.csv", header = F)
 goi = goi$V1
 
+toMatch <- c("CCNA", "CCNB", "CCND", "CCNE")
+goi <- unique (grep(paste(toMatch,collapse="|"), row.names(p_ndata), value=TRUE))
+goi <- unique (grep(paste(toMatch,collapse="|"), row.names(g_ndata), value=TRUE))
+
+setwd("/Users/aj/Dropbox (Partners HealthCare)/PCA_Atlas1-2020/Figures/PDF/")
 somePDFPath = paste(getwd(), '/pickseq.pdf', sep="")
 pdf(file=somePDFPath)
 for (i in goi){
   try(plot(goi_collapsed_jitter (data=p_ndata,meta=p_meta,goi=i,intgroup='roi')))
 }
 dev.off()
+
 
 somePDFPath = paste(getwd(), '/geomx.pdf', sep="")
 pdf(file=somePDFPath)
@@ -1014,9 +1020,7 @@ for (i in goi){
 }
 dev.off()
 
-# correla
-
-
+# network graph
 # subset ndata
 subset_meta <- p_meta[p_meta$roi %in% c('IT','ET'),]
 subset_ndata <- p_ndata[,colnames(p_ndata) %in% row.names(subset_meta)]
@@ -1025,7 +1029,7 @@ subset_ndata <- p_ndata[,colnames(p_ndata) %in% row.names(subset_meta)]
 library(HiClimR)
 exp <- p_ndata#subset_ndata
 g_corr = data.frame(fastCor(as.matrix(t(exp)), optBLAS = TRUE))
-goi = "S100B"
+goi = "MIF"
 g_goi <- g_corr[,goi,drop=F]
 g_goi <- g_goi[order(g_goi[,1],decreasing = T),,drop=F]
 head(g_goi, 20)

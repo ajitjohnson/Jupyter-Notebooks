@@ -7,6 +7,8 @@ setwd("/Users/aj/Dropbox (Partners HealthCare)/Data/melanoma_rarecyte/round-1/sa
 setwd("//research.files.med.harvard.edu/ImStor/sorger/data/rnaseq/ajit_johnson/covid/alignment/final")
 setwd("D:/gw/final")
 setwd("C:/Users/ajn16/Desktop/cell_line/")
+setwd("/Volumes/SSD/Dropbox (Partners HealthCare)/for_others/Ran/pickseq_scrnaseq/15july2021_1st_trial/ran and lydie samples/kallisto")
+
 
 
 
@@ -16,11 +18,13 @@ library("tximport")
 library("tximportData")
 library("EnsDb.Hsapiens.v86")
 library("stringr")
+library("rhdf5")
 
 
 # Load data
 #files <- file.path(getwd(), list.files(getwd()))
 files <- file.path(getwd(), list.files(pattern = ".sf", recursive = TRUE))
+files <- file.path(getwd(), list.files(pattern = ".h5", recursive = TRUE))
 
 # If needed
 tx2gene <- read.csv("C:/Users/ajn16/Dropbox (Partners HealthCare)/Data/iris/100_celllines/tx2gene.csv", header = F)
@@ -35,12 +39,16 @@ tx2gene <- tx2gene[complete.cases(tx2gene),]
 
 # Run trimport
 txi.tx <- tximport(files, type = "salmon", tx2gene = tx2gene, countsFromAbundance = "lengthScaledTPM", ignoreTxVersion = TRUE) # transcript level abundance
+txi.tx <- tximport(files, type = "kallisto", tx2gene = tx2gene, countsFromAbundance = "lengthScaledTPM", ignoreTxVersion = TRUE) # transcript level abundance
+
 head(txi.tx$counts)
 
 # add column name
 file_names <- list.files(pattern = ".sf", recursive = TRUE)
+file_names <- list.files(pattern = ".h5", recursive = TRUE)
 file_names <- str_remove(file_names, "/quant.sf")
 file_names <- str_remove(file_names, "/salmon/quant.sf")
+file_names <- str_remove(file_names, "/quant/abundance.h5")
 
 # add columname
 data <- txi.tx$counts
@@ -49,10 +57,11 @@ data <- round(data, digits = 0)
 
 # Write the data out
 write.csv(data, file = "counts_tpm.csv")
+write.csv(data, file = "kallisto_tpm.csv")
 
 # Convert transcripts to genes
 d <- arseq.ensembl2genename (data)
-write.csv(data, file = "counts_tpm_genenames.csv")
+write.csv(data, file = "kallisto_tpm_genenames.csv")
 
 
 # Merge a lot of CSV files
@@ -72,9 +81,12 @@ colnames(d) <- file_names
 
 write.csv(d, file = "counts.csv")
 
-# Functions
+# Functions to convert to gene names
+setwd("/Volumes/SSD/Dropbox (Partners HealthCare)/for_others/Ran/pickseq_scrnaseq/15july2021_1st_trial/ran and lydie samples/")
+data <- read.csv("kallisto_tpm.csv", header = T, row.names = 1)
+
+library("biomaRt")
 arseq.ensembl2genename <- function(data,ensemblmirror=NULL){
-  require(biomaRt)
   print("Converting ENSEMBL ID's to gene names")
   ensembl <- useEnsembl(biomart="ensembl", dataset="hsapiens_gene_ensembl", mirror=ensemblmirror)
   genes <- getBM(attributes=c('ensembl_gene_id','hgnc_symbol'), mart = ensembl)

@@ -18,6 +18,7 @@ setwd("/Volumes/SSD/Dropbox (Partners HealthCare)/PTCL Analysis/for R/NOS/tumor_
 setwd("/Volumes/SSD/Dropbox (Partners HealthCare)/PTCL Analysis/for R/NOS/fht_het/")
 setwd("/Volumes/SSD/Dropbox (Partners HealthCare)/PTCL Analysis/for R/ALI/tumor_heterogenity/")
 setwd("/Users/aj/Dropbox (Partners HealthCare)/PTCL Analysis/for R/all_whole_slide/stroma/")
+setwd("/Users/aj/Dropbox (Partners HealthCare)/PCA_Atlas1-2020/Figures/figures_aj_pdf/for R/TC/")
 
 # tumor heterogenity plot
 # Import data
@@ -37,16 +38,23 @@ median_cellfeatures <-  median_cellfeatures[row.names(pheno_group),]
 pheno_prop <-  pheno_prop[row.names(pheno_group),]
 
 # scale data if needed
-#median_expression <- scale(median_expression)
+median_expression <- scale(median_expression)
+median_cellfeatures <- scale(median_cellfeatures)
 #median_expression <- t(scale(t(median_expression)))
 #median_cellfeatures <- t(scale(t(median_cellfeatures)))
 
 h1_col = colorRamp2(c(0.20, 0.4, 0.5, 0.6, 0.8), c("#4B6AAF",  '#55B0AE', "#FFFFFF","#F5A15B","#B11E4B")) #F8F6B8
 h2_col = colorRamp2(c(0.20, 0.4, 0.5, 0.6, 0.8), c("#4B6AAF",  '#55B0AE', "#FFFFFF","#F5A15B","#B11E4B"))
-#h1_col = colorRamp2(c(-2, -1, 0, 1, 2), c("#4B6AAF",  '#55B0AE', "#FFFFFF","#F5A15B","#B11E4B")) #F8F6B8
-#h2_col = colorRamp2(c(-2, -1, 0, 1, 2), c("#4B6AAF",  '#55B0AE', "#FFFFFF","#F5A15B","#B11E4B"))
+
+h1_col = colorRamp2(c(0.20, 0.3, 0.5, 0.6, 0.8), c("#ccd5ae",  '#e9edc9', "#fefae0","#faedcd","#d4a373")) #F8F6B8
+h2_col = colorRamp2(c(0.20, 0.4, 0.5, 0.6, 0.8), c("#4B6AAF",  '#55B0AE', "#FFFFFF","#F5A15B","#B11E4B"))
+
+h1_col = colorRamp2(c(-1.5, -0.75, 0, 0.75, 1.5), c("#ccd5ae",  '#e9edc9', "#fefae0","#faedcd","#d4a373")) #F8F6B8
+h2_col = colorRamp2(c(0.20, 0.4, 0.5, 0.6, 0.8), c("#4B6AAF",  '#55B0AE', "#FFFFFF","#F5A15B","#B11E4B"))
+
 
 cols <- colorRampPalette(brewer.pal(length(colnames(pheno_prop)), "Spectral"))(length(colnames(pheno_prop))) # extend colors
+#cols <- c('#7FA840','#BD8C2C','#676767')
 pheno_p = rowAnnotation(axis_reverse = anno_barplot(pheno_prop,
                                                    border = F,
                                                    gp = gpar(fill = cols),

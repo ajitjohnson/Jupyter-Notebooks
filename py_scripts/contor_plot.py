@@ -41,7 +41,7 @@ temp_scaled = 1-temp_scaled # make lowest distance have the highest weight
 dist_scaled = np.reshape(temp_scaled, dist.shape)
 
 # replace the indeces with value of a marker of interest
-goi = 'CD63'
+goi = 'S100B'
 goi_loc = bdata.var.index.get_loc(goi)
 #maker_data = bdata.X[:,goi_loc]
 maker_data = np.log1p(bdata.raw.X[:,goi_loc])
@@ -81,8 +81,39 @@ ax.scatter(a, b, s=0.2, c = c, cmap='RdYlBu_r') # '#83c5be'
 ax.tricontour(x, y, z,  linewidths=1.2, colors='white', levels=150) #levels=15,
 #ax.tricontourf(x, y, z,  cmap="cividis") # levels=15,
 ax.invert_yaxis()
+ax.set_xlim(14955, 20390)
+ax.set_ylim(12750, 9588)
 plt.xticks([]) ; plt.yticks([]);
+plt.savefig('/Users/aj/Dropbox (Partners HealthCare)/PCA_Atlas1-2020/Figures/figures_aj_pdf/F3_gradient_S100B_EM.png', dpi=800)
 
+# save only the contors
+# contor plot
+fig, ax = plt.subplots(figsize=(8,6))
+#ax.scatter(pseudo_x, pseudo_y, s=0.2, c = 'b')
+ax.set_facecolor('#adb5bd')
+ax.tricontour(x, y, z,  linewidths=1.2, colors='white', levels=150) #levels=15,
+ax.invert_yaxis()
+ax.set_xlim(10678, 15354)
+ax.set_ylim(6354, 3282)
+plt.xticks([]) ; plt.yticks([]);
+plt.savefig('/Users/aj/Dropbox (Partners HealthCare)/PCA_Atlas1-2020/Figures/figures_aj_pdf/F3_gradient_s100A_contors_EM.pdf', dpi=800)
+
+
+# IM region
+ax.set_xlim(23163, 27368)
+ax.set_ylim(14948, 12092)
+
+# s100a em
+ax.set_xlim(10678, 15354)
+ax.set_ylim(6354, 3282)
+
+# MITF exophytic melanoma
+ax.set_xlim(4125, 9099)
+ax.set_ylim(16235, 11985)
+
+# S100B exophytic melanoma
+ax.set_xlim(14955, 20390)
+ax.set_ylim(12750, 9588)
 
 # plotyl
 plotly (IM,phenotype='phenotype_2',size=2, opacity = 1)
