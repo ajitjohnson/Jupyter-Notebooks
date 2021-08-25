@@ -1,0 +1,65 @@
+
+cd /n/scratch3/users/a/ajn16/test
+
+bash sub.sh -p '/n/scratch3/users/a/ajn16/abval' -t '/n/scratch3/users/a/ajn16/test/batch.sh'
+
+cd /n/scratch3/users/a/ajn16/abval/CCR4
+
+## Steps to run mcmicro as a batch in O2
+
+# Create two files
+
+
+# One : The submission script with all the details of setttings to mcmicro
+
+
+
+# Two: A warpper bash script to run all images within a folder
+
+```bash
+#!/bin/sh
+
+TARGRET_DIR=/n/scratch3/users/a/ajn16/abval
+SLIDEDIRS=($TARGRET_DIR/*/)
+
+
+for dir in ${SLIDEDIRS[@]}; do
+    cd $dir
+    echo $(basename $dir) $dir
+    sbatch --job-name $(basename $dir) \
+        /home/yc296/project/20210807-191-CRCWSI_Immune-2021JUL/submit_id_template.sh $dir 
+    sleep 10
+done
+```
+
+
+#!/bin/bash
+#SBATCH -p short
+#SBATCH -J nextflow_O2
+#SBATCH -o run.o
+#SBATCH -e run.e
+#SBATCH -t 0-12:00
+#SBATCH --mem=8G
+#SBATCH --mail-type=END
+#SBATCH --mail-user=ajitj_nirmal@dfci.harvard.edu
+
+# get the values
+SAMPLEDIR=$1
+SAMPLEID=$(basename $SAMPLEDIR)
+
+# load packages
+module purge
+module load java
+
+# Run
+/home/$USER/bin/nextflow run labsyspharm/mcmicro \
+    -profile        O2 \
+    --in            $SAMPLEDIR \
+    -profile        O2large \
+    -w              /n/scratch3/users/${USER:0:1}/$USER/work \
+    -with-report    $USER-$(date -Is)-$SAMPLEID.html \
+    --start-at      illumination \
+    --unmicst-opts  '--channel 1' \
+    --s3seg-opts    '--cytoMethod ring --cytoDilation 3 --segmentCytoplasm segmentCytoplasm --nucleiRegion localThreshold' \
+    --quant-opts    '--masks cellRing.ome.tif' \
+    --stop-at       quantification

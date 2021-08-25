@@ -61,8 +61,9 @@ write.csv(data, file = "kallisto_tpm.csv")
 
 # Convert transcripts to genes
 d <- arseq.ensembl2genename (data)
-write.csv(data, file = "kallisto_tpm_genenames.csv")
+write.csv(d, file = "kallisto_tpm_genenames.csv")
 
+setwd("/Volumes/SSD/Dropbox (Partners HealthCare)/for_others/Ran/pickseq_scrnaseq/15july2021_1st_trial/ran and lydie samples/")
 
 # Merge a lot of CSV files
 setwd("/Users/aj/Dropbox (Partners HealthCare)/Data/covid19/NHP/pickseq/fastq processing/viral/htseq-count/")
