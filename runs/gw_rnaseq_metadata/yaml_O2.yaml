@@ -1,0 +1,14 @@
+# Template for human RNA-seq using Illumina prepared samples
+#
+---
+details:
+  - analysis: RNA-seq
+    genome_build: hg38
+    algorithm:
+      transcriptome_fasta:  /n/scratch2/ajit/rnaseq/reference/Homo_sapiens.GRCh38.95.fa
+      transcriptome_gtf:  /n/scratch2/ajit/rnaseq/reference/Homo_sapiens.GRCh38.95.gtf
+      quality_format: Standard
+      aligner: hisat2
+      strandedness: unstranded
+upload:
+  dir: ../finals
