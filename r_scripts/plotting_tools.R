@@ -1027,9 +1027,9 @@ subset_ndata <- p_ndata[,colnames(p_ndata) %in% row.names(subset_meta)]
 
 # Find correlation for a gene
 library(HiClimR)
-exp <- p_ndata#subset_ndata
+exp <- ndata#subset_ndata
 g_corr = data.frame(fastCor(as.matrix(t(exp)), optBLAS = TRUE))
-goi = "MIF"
+goi = "BATF3"
 g_goi <- g_corr[,goi,drop=F]
 g_goi <- g_goi[order(g_goi[,1],decreasing = T),,drop=F]
 head(g_goi, 20)
